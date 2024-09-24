@@ -9,7 +9,7 @@
     <style>
         body { margin: 0; padding: 0; }
         #map { width: 100%; height: 90vh; }
-        #slider-container {
+        #controls {
             position: absolute;
             bottom: 20px;
             left: 20px;
@@ -26,8 +26,9 @@
 </head>
 <body>
     <div id="map"></div>
-    <div id="slider-container">
+    <div id="controls">
         <input id="year-slider" type="range" min="2018" max="2023" value="2018" step="1">
+        <button id="play-pause">Pause</button>
         <div id="year">Year: 2018</div>
     </div>
     <script>
@@ -42,11 +43,38 @@
             zoom: 6
         });
 
+        let currentYear = 2018;
+        let playing = true; // Control whether the animation is playing
+        let interval;
+
         // Function to update the map based on the selected year
         function updateMapByYear(year) {
-            // Update the filter on the layer to show data only for the selected year
             map.setFilter('geojson-layer', ['==', ['get', 'year'], year]);
             document.getElementById('year').textContent = `Year: ${year}`;
+            document.getElementById('year-slider').value = year;
+        }
+
+        // Function to cycle through years automatically
+        function startAutoplay() {
+            interval = setInterval(() => {
+                if (currentYear > 2023) {
+                    currentYear = 2018;
+                }
+                updateMapByYear(currentYear);
+                currentYear++;
+            }, 20000); // 20 seconds per year
+        }
+
+        // Pause or resume the autoplay
+        function togglePlayPause() {
+            if (playing) {
+                clearInterval(interval);
+                document.getElementById('play-pause').textContent = 'Play';
+            } else {
+                startAutoplay();
+                document.getElementById('play-pause').textContent = 'Pause';
+            }
+            playing = !playing;
         }
 
         // Load the GeoJSON data from GitHub Pages
@@ -69,10 +97,19 @@
                 filter: ['==', ['get', 'year'], 2018] // Initial filter for the first year
             });
 
+            // Start autoplay
+            startAutoplay();
+
+            // Set up event listener for play/pause button
+            document.getElementById('play-pause').addEventListener('click', togglePlayPause);
+
             // Set up the slider event listener
             document.getElementById('year-slider').addEventListener('input', (e) => {
                 const selectedYear = parseInt(e.target.value, 10);
                 updateMapByYear(selectedYear);
+                clearInterval(interval); // Pause autoplay when manually selecting a year
+                document.getElementById('play-pause').textContent = 'Play';
+                playing = false;
             });
         });
     </script>
