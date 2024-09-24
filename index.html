@@ -29,7 +29,7 @@
     <div id="controls">
         <input id="year-slider" type="range" min="2018" max="2023" value="2018" step="1">
         <button id="play-pause">Pause</button>
-        <div id="year">Year: 2018</div>
+        <div id="year">Years: 2018</div>
     </div>
     <script>
         // Set your Mapbox access token
@@ -47,11 +47,12 @@
         let playing = true; // Control whether the animation is playing
         let interval;
 
-        // Function to update the map based on the selected year
+        // Function to update the map to show data cumulatively up to the selected year
         function updateMapByYear(year) {
-            console.log(`Updating map for year: ${year}`);
-            map.setFilter('geojson-layer', ['==', ['get', 'year'], year]);
-            document.getElementById('year').textContent = `Year: ${year}`;
+            const years = Array.from({ length: year - 2018 + 1 }, (_, i) => 2018 + i);
+            console.log(`Updating map for years: ${years}`);
+            map.setFilter('geojson-layer', ['in', ['get', 'year'], ...years]);
+            document.getElementById('year').textContent = `Years: ${years.join(', ')}`;
             document.getElementById('year-slider').value = year;
         }
 
@@ -63,7 +64,7 @@
                 }
                 updateMapByYear(currentYear);
                 currentYear++;
-            }, 10000); // 10 seconds per year
+            }, 20000); // 20 seconds per step
         }
 
         // Pause or resume the autoplay
@@ -95,16 +96,8 @@
                     'circle-color': ['interpolate', ['linear'], ['get', 'fatalities'], 0, '#f28cb1', 100, '#e55e5e'],
                     'circle-opacity': 0.8
                 },
-                filter: ['==', ['get', 'year'], 2018] // Initial filter for the first year
+                filter: ['in', ['get', 'year'], 2018] // Initial filter for the first year
             });
-
-            // Check if data loads correctly
-            map.getSource('geojson-data').on('error', (error) => {
-                console.error('Error loading GeoJSON:', error);
-            });
-
-            // Log successful data load
-            console.log('GeoJSON data loaded successfully.');
 
             // Start autoplay
             startAutoplay();
