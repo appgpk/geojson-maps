@@ -50,7 +50,7 @@
         // Function to update the map based on the selected year
         function updateMapByYear(year) {
             map.setFilter('geojson-layer', ['==', ['get', 'year'], year]);
-            document.getElementById('year').textContent = Year: ${year};
+            document.getElementById('year').textContent = `Year: ${year}`;
             document.getElementById('year-slider').value = year;
         }
 
@@ -81,7 +81,7 @@
         map.on('load', () => {
             map.addSource('geojson-data', {
                 type: 'geojson',
-                data: 'https://raw.githubusercontent.com/appgpk/geojson-maps/blob/main/output.geojson' // Use the GitHub Pages URL
+                data: 'https://raw.githubusercontent.com/appgpk/geojson-maps/main/output.geojson' // Use the GitHub Pages URL
             });
 
             // Add a layer to display the GeoJSON data
