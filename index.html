@@ -3,57 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapbox GL JS with GeoJSON from GitHub</title>
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.js"></script>
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.css" rel="stylesheet">
+    <title>Dynamic Mapbox Graph</title>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.16.0/mapbox-gl.css" rel="stylesheet">
     <style>
-        body { margin: 0; padding: 0; }
-        #map { width: 100%; height: 100vh; }
+        #map {
+            width: 100%;
+            height: 500px;
+        }
     </style>
 </head>
 <body>
     <div id="map"></div>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.16.0/mapbox-gl.js"></script>
     <script>
-        // Set your Mapbox access token
-        mapboxgl.accessToken = 'pk.eyJ1IjoibWNhcm1lbGxlIiwiYSI6ImNtMWVsMHA1ZzBqZWQya29nd2hkdTB5NmkifQ.bNVQfNW1czgdKjrRjUkxcg'; // Replace with your Mapbox access token
+        // Replace with your Mapbox access token
+        mapboxgl.accessToken = 'YOUR_MAPBOX_ACCESS_TOKEN';
 
-        // Initialize the map
+        // Initialize the Mapbox map
         const map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/light-v10', // Map style
-            center: [-1.5616, 12.2383], // Center coordinates for Burkina Faso
-            zoom: 6
+            style: 'mapbox://styles/mapbox/streets-v11',
+            center: [-74.5, 40], // Starting position [lng, lat]
+            zoom: 9 // Starting zoom level
         });
 
-        // Load the GeoJSON data from GitHub Pages
-map.on('load', () => {
-    fetch('https://raw.githubusercontent.com/appgpk/geojson-maps/main/output.geojson')
-        .then(response => {
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return response.json();
-        })
-        .then(data => {
-            console.log('GeoJSON data loaded:', data); // Check that data is loaded
-            map.addSource('geojson-data', {
+        // Initial data for the map (points)
+        const initialData = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                        coordinates: [-74.5, 40]
+                    },
+                    properties: {
+                        title: 'Sample Point 1',
+                        description: 'Description for Point 1'
+                    }
+                },
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                        coordinates: [-75.5, 39]
+                    },
+                    properties: {
+                        title: 'Sample Point 2',
+                        description: 'Description for Point 2'
+                    }
+                }
+            ]
+        };
+
+        // Add the data source and layer to the map
+        map.on('load', () => {
+            map.addSource('points', {
                 type: 'geojson',
-                data: data
+                data: initialData
             });
+
             map.addLayer({
-                id: 'geojson-layer',
+                id: 'points',
                 type: 'circle',
-                source: 'geojson-data',
+                source: 'points',
                 paint: {
-                    'circle-radius': ['interpolate', ['linear'], ['get', 'fatalities'], 0, 4, 100, 30],
-                    'circle-color': ['interpolate', ['linear'], ['get', 'fatalities'], 0, '#f28cb1', 100, '#e55e5e'],
-                    'circle-opacity': 0.8
+                    'circle-radius': 6,
+                    'circle-color': '#B42222'
                 }
             });
-        })
-        .catch(error => {
-            console.error('Error loading GeoJSON:', error);
-        });
-});
 
+            // Add a popup when a point is clicked
+            map.on('click', 'points', (e) => {
+                const coordinates = e.features[0].geometry.coordinates.slice();
+                const { title, description } = e.features[0].properties;
+
+                new mapboxgl.Popup()
+                    .setLngLat(coordinates)
+                    .setHTML(`<h3>${title}</h3><p>${description}</p>`)
+                    .addTo(map);
+            });
+
+            // Change the cursor to a pointer when hovering over points
+            map.on('mouseenter', 'points', () => {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+
+            map.on('mouseleave', 'points', () => {
+                map.getCanvas().style.cursor = '';
+            });
+        });
+
+        // Function to update data dynamically
+        function updateData() {
+            // Fetch or generate new data (this example generates new data)
+            const newData = {
+                type: 'FeatureCollection',
+                features: [
+                    {
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [-74, 40.5]
+                        },
+                        properties: {
+                            title: 'New Point',
+                            description: 'Dynamically added point'
+                        }
+                    },
+                    {
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [-74.7, 40.3]
+                        },
+                        properties: {
+                            title: 'Another New Point',
+                            description: 'Another dynamically added point'
+                        }
+                    }
+                ]
+            };
+
+            // Update the map source with the new data
+            map.getSource('points').setData(newData);
+        }
+
+        // Update the data every 10 seconds
+        setInterval(updateData, 10000);
     </script>
 </body>
 </html>
