@@ -49,6 +49,7 @@
 
         // Function to update the map based on the selected year
         function updateMapByYear(year) {
+            console.log(`Updating map for year: ${year}`);
             map.setFilter('geojson-layer', ['==', ['get', 'year'], year]);
             document.getElementById('year').textContent = `Year: ${year}`;
             document.getElementById('year-slider').value = year;
@@ -62,7 +63,7 @@
                 }
                 updateMapByYear(currentYear);
                 currentYear++;
-            }, 20000); // 20 seconds per year
+            }, 10000); // 10 seconds per year
         }
 
         // Pause or resume the autoplay
@@ -96,6 +97,14 @@
                 },
                 filter: ['==', ['get', 'year'], 2018] // Initial filter for the first year
             });
+
+            // Check if data loads correctly
+            map.getSource('geojson-data').on('error', (error) => {
+                console.error('Error loading GeoJSON:', error);
+            });
+
+            // Log successful data load
+            console.log('GeoJSON data loaded successfully.');
 
             // Start autoplay
             startAutoplay();
