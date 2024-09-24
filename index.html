@@ -46,24 +46,23 @@
         let currentYear = 2018;
         let playing = true; // Control whether the animation is playing
         let interval;
-        let yearRange = [2018]; // Array to keep track of years being displayed
 
-        // Function to update the map based on the selected year range
-        function updateMapByYears(years) {
-            // Update the filter to include all selected years
-            map.setFilter('geojson-layer', ['in', ['get', 'year'], ...years]);
-            document.getElementById('year').textContent = `Years: ${years.join(', ')}`;
-            document.getElementById('year-slider').value = Math.max(...years);
+        // Function to update the map based on the selected year
+        function updateMapByYear(year) {
+            map.setFilter('geojson-layer', ['==', ['get', 'year'], year]);
+            document.getElementById('year').textContent = Year: ${year};
+            document.getElementById('year-slider').value = year;
         }
 
         // Function to cycle through years automatically
         function startAutoplay() {
             interval = setInterval(() => {
-                if (Math.max(...yearRange) < 2023) {
-                    yearRange.push(Math.max(...yearRange) + 1); // Add the next year
+                if (currentYear > 2023) {
+                    currentYear = 2018;
                 }
-                updateMapByYears(yearRange);
-            }, 20000); // 20 seconds interval
+                updateMapByYear(currentYear);
+                currentYear++;
+            }, 5000); 
         }
 
         // Pause or resume the autoplay
@@ -82,8 +81,7 @@
         map.on('load', () => {
             map.addSource('geojson-data', {
                 type: 'geojson',
-                data: 'https://raw.githubusercontent.com/appgpk/geojson-maps/main/output.geojson', // Use the GitHub Pages URL
-                generateId: true // Generate a unique id for each feature
+                data: 'https://raw.githubusercontent.com/appgpk/geojson-maps/main/output.geojson' // Use the GitHub Pages URL
             });
 
             // Add a layer to display the GeoJSON data
@@ -96,14 +94,7 @@
                     'circle-color': ['interpolate', ['linear'], ['get', 'fatalities'], 0, '#f28cb1', 100, '#e55e5e'],
                     'circle-opacity': 0.8
                 },
-                filter: ['in', ['get', 'year'], ...yearRange] // Initial filter for the first year
-            });
-
-            // Check if data loads correctly
-            map.getSource('geojson-data').on('data', (e) => {
-                if (e.isSourceLoaded) {
-                    console.log("GeoJSON data loaded successfully");
-                }
+                filter: ['==', ['get', 'year'], 2018] // Initial filter for the first year
             });
 
             // Start autoplay
@@ -115,8 +106,7 @@
             // Set up the slider event listener
             document.getElementById('year-slider').addEventListener('input', (e) => {
                 const selectedYear = parseInt(e.target.value, 10);
-                yearRange = Array.from({ length: selectedYear - 2018 + 1 }, (_, i) => 2018 + i);
-                updateMapByYears(yearRange);
+                updateMapByYear(selectedYear);
                 clearInterval(interval); // Pause autoplay when manually selecting a year
                 document.getElementById('play-pause').textContent = 'Play';
                 playing = false;
