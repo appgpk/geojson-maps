@@ -25,11 +25,11 @@
             zoom: 6
         });
 
-        // Load the GeoJSON data from GitHub
+        // Load the GeoJSON data from GitHub Pages
         map.on('load', () => {
             map.addSource('geojson-data', {
                 type: 'geojson',
-                data: 'https://raw.githubusercontent.com/appgpk/geojson-maps/main/output.geojson' // Correct raw URL of your GeoJSON file
+                data: 'https://your-username.github.io/your-repo/output.geojson' // Use the GitHub Pages URL
             });
 
             // Add a layer to display the GeoJSON data
