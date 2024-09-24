@@ -26,13 +26,18 @@
         });
 
         // Load the GeoJSON data from GitHub Pages
-        map.on('load', () => {
+map.on('load', () => {
+    fetch('https://raw.githubusercontent.com/appgpk/geojson-maps/main/output.geojson')
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return response.json();
+        })
+        .then(data => {
+            console.log('GeoJSON data loaded:', data); // Check that data is loaded
             map.addSource('geojson-data', {
                 type: 'geojson',
-                data: 'https://raw.githubusercontent.com/appgpk/geojson-maps/main/output.geojson' // Use the GitHub Pages URL
+                data: data
             });
-
-            // Add a layer to display the GeoJSON data
             map.addLayer({
                 id: 'geojson-layer',
                 type: 'circle',
@@ -43,7 +48,12 @@
                     'circle-opacity': 0.8
                 }
             });
+        })
+        .catch(error => {
+            console.error('Error loading GeoJSON:', error);
         });
+});
+
     </script>
 </body>
 </html>
