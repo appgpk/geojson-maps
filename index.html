@@ -22,87 +22,15 @@
             margin-top: 10px;
             text-align: center;
         }
-    </style>
-</head>
-<body>
-    <div id="map"></div>
-    <div id="controls">
-        <input id="year-slider" type="range" min="2018" max="2023" value="2018" step="1">
-        <button id="play-pause">Pause</button>
-        <div id="year">Years: 2018</div>
-    </div>
-    <script>
-        // Set your Mapbox access token
-        mapboxgl.accessToken = 'pk.eyJ1IjoibWNhcm1lbGxlIiwiYSI6ImNtMWVsMHA1ZzBqZWQya29nd2hkdTB5NmkifQ.bNVQfNW1czgdKjrRjUkxcg'; // Replace with your Mapbox access token
-
-        // Initialize the map
-        const map = new mapboxgl.Map({
-            container: 'map',
-            style: 'mapbox://styles/mapbox/light-v10', // Map style
-            center: [-1.5616, 12.2383], // Center coordinates for Burkina Faso
-            zoom: 6
-        });
-
-        let currentYear = 2018;
-        let playing = true; // Control whether the animation is playing
-        let interval;
-
-        // Function to update the map to show data cumulatively up to the selected year
-        function updateMapByYear(year) {
-            const years = Array.from({ length: year - 2018 + 1 }, (_, i) => 2018 + i);
-            console.log(`Updating map for years: ${years}`);
-            map.setFilter('geojson-layer', ['in', ['get', 'year'], ...years]);
-            document.getElementById('year').textContent = `Years: ${years.join(', ')}`;
-            document.getElementById('year-slider').value = year;
-        }
-
-        // Function to cycle through years automatically
-        function startAutoplay() {
-            interval = setInterval(() => {
-                if (currentYear > 2023) {
-                    currentYear = 2018;
-                }
-                updateMapByYear(currentYear);
-                currentYear++;
-            }, 20000); // 20 seconds per step
-        }
-
-        // Pause or resume the autoplay
-        function togglePlayPause() {
-            if (playing) {
-                clearInterval(interval);
-                document.getElementById('play-pause').textContent = 'Play';
-            } else {
-                startAutoplay();
-                document.getElementById('play-pause').textContent = 'Pause';
-            }
-            playing = !playing;
-        }
-
-        // Load the GeoJSON data from GitHub Pages
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapbox GL JS with GeoJSON from GitHub</title>
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.js"></script>
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.css" rel="stylesheet">
-    <style>
-        body { margin: 0; padding: 0; }
-        #map { width: 100%; height: 90vh; }
-        #controls {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 10px;
-            border-radius: 5px;
-        }
-        #year {
+        #error-message {
+            color: red;
             font-weight: bold;
-            margin-top: 10px;
-            text-align: center;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 5px;
+            display: none; /* Hidden by default */
         }
     </style>
 </head>
@@ -113,32 +41,38 @@
         <button id="play-pause">Pause</button>
         <div id="year">Years: 2018</div>
     </div>
+    <div id="error-message">Error loading map data. Check console for details.</div>
     <script>
         // Set your Mapbox access token
-        mapboxgl.accessToken = 'pk.eyJ1IjoibWNhcm1lbGxlIiwiYSI6ImNtMWVsMHA1ZzBqZWQya29nd2hkdTB5NmkifQ.bNVQfNW1czgdKjrRjUkxcg'; // Replace with your Mapbox access token
+        mapboxgl.accessToken = 'YOUR_MAPBOX_ACCESS_TOKEN'; // Replace with your Mapbox access token
 
         // Initialize the map
         const map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/light-v10', // Map style
-            center: [-1.5616, 12.2383], // Center coordinates for Burkina Faso
+            style: 'mapbox://styles/mapbox/light-v10',
+            center: [-1.5616, 12.2383], // Center on Burkina Faso
             zoom: 6
         });
 
         let currentYear = 2018;
-        let playing = true; // Control whether the animation is playing
+        let playing = true;
         let interval;
 
-        // Function to update the map to show data cumulatively up to the selected year
+        // Function to update map data by selected year
         function updateMapByYear(year) {
             const years = Array.from({ length: year - 2018 + 1 }, (_, i) => 2018 + i);
             console.log(`Updating map for years: ${years}`);
-            map.setFilter('geojson-layer', ['in', ['get', 'year'], ...years]);
-            document.getElementById('year').textContent = `Years: ${years.join(', ')}`;
-            document.getElementById('year-slider').value = year;
+            try {
+                map.setFilter('geojson-layer', ['in', ['get', 'year'], ...years]);
+                document.getElementById('year').textContent = `Years: ${years.join(', ')}`;
+                document.getElementById('year-slider').value = year;
+            } catch (error) {
+                console.error('Error updating map filter:', error);
+                displayErrorMessage('Error updating map filter. Check the console for details.');
+            }
         }
 
-        // Function to cycle through years automatically
+        // Function to handle autoplay of years
         function startAutoplay() {
             interval = setInterval(() => {
                 if (currentYear > 2023) {
@@ -146,10 +80,10 @@
                 }
                 updateMapByYear(currentYear);
                 currentYear++;
-            }, 20000); // 20 seconds per step
+            }, 2000); // Adjust to a faster cycle for testing
         }
 
-        // Pause or resume the autoplay
+        // Play/Pause toggle functionality
         function togglePlayPause() {
             if (playing) {
                 clearInterval(interval);
@@ -161,14 +95,20 @@
             playing = !playing;
         }
 
-        // Load the GeoJSON data from GitHub Pages
+        // Display error message in the UI
+        function displayErrorMessage(message) {
+            const errorMessageDiv = document.getElementById('error-message');
+            errorMessageDiv.textContent = message;
+            errorMessageDiv.style.display = 'block'; // Show error message
+        }
+
+        // Load the GeoJSON data
         map.on('load', () => {
             map.addSource('geojson-data', {
                 type: 'geojson',
-                data: 'https://raw.githubusercontent.com/appgpk/geojson-maps/main/output.geojson' // Use the GitHub Pages URL
+                data: 'https://raw.githubusercontent.com/appgpk/geojson-maps/main/output.geojson'
             });
 
-            // Add a layer to display the GeoJSON data
             map.addLayer({
                 id: 'geojson-layer',
                 type: 'circle',
@@ -178,27 +118,28 @@
                     'circle-color': ['interpolate', ['linear'], ['get', 'fatalities'], 0, '#f28cb1', 100, '#e55e5e'],
                     'circle-opacity': 0.8
                 },
-                filter: ['in', ['get', 'year'], 2018] // Initial filter for the first year
+                filter: ['in', ['get', 'year'], 2018] // Initial filter
             });
 
-            // Start autoplay
+            // Start autoplay when the layer loads
             startAutoplay();
 
-            // Set up event listener for play/pause button
+            // Event listeners
             document.getElementById('play-pause').addEventListener('click', togglePlayPause);
-
-            // Set up the slider event listener
             document.getElementById('year-slider').addEventListener('input', (e) => {
                 const selectedYear = parseInt(e.target.value, 10);
                 updateMapByYear(selectedYear);
-                clearInterval(interval); // Pause autoplay when manually selecting a year
+                clearInterval(interval); // Stop autoplay when adjusting manually
                 document.getElementById('play-pause').textContent = 'Play';
                 playing = false;
             });
         });
-    </script>
-</body>
-</html>
+
+        // Catch any map errors
+        map.on('error', (e) => {
+            console.error('Map error:', e);
+            displayErrorMessage('Error loading map data. Check the console for details.');
+        });
     </script>
 </body>
 </html>
