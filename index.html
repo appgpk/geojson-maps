@@ -50,6 +50,7 @@
 
         // Function to update the map based on the selected year range
         function updateMapByYears(years) {
+            // Update the filter to include all selected years
             map.setFilter('geojson-layer', ['in', ['get', 'year'], ...years]);
             document.getElementById('year').textContent = `Years: ${years.join(', ')}`;
             document.getElementById('year-slider').value = Math.max(...years);
@@ -81,7 +82,8 @@
         map.on('load', () => {
             map.addSource('geojson-data', {
                 type: 'geojson',
-                data: 'https://raw.githubusercontent.com/appgpk/geojson-maps/main/output.geojson' // Use the GitHub Pages URL
+                data: 'https://raw.githubusercontent.com/appgpk/geojson-maps/main/output.geojson', // Use the GitHub Pages URL
+                generateId: true // Generate a unique id for each feature
             });
 
             // Add a layer to display the GeoJSON data
@@ -95,6 +97,13 @@
                     'circle-opacity': 0.8
                 },
                 filter: ['in', ['get', 'year'], ...yearRange] // Initial filter for the first year
+            });
+
+            // Check if data loads correctly
+            map.getSource('geojson-data').on('data', (e) => {
+                if (e.isSourceLoaded) {
+                    console.log("GeoJSON data loaded successfully");
+                }
             });
 
             // Start autoplay
