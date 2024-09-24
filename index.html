@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapbox GL JS with GeoJSON</title>
+    <title>Mapbox GL JS with GeoJSON from GitHub</title>
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.css" rel="stylesheet">
     <style>
@@ -17,10 +17,20 @@
             padding: 10px;
             border-radius: 5px;
         }
+        #year {
+            font-weight: bold;
+            margin-top: 10px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <div id="map"></div>
+    <div id="controls">
+        <input id="year-slider" type="range" min="2018" max="2023" value="2018" step="1">
+        <button id="play-pause">Pause</button>
+        <div id="year">Year: 2018</div>
+    </div>
     <script>
         // Set your Mapbox access token
         mapboxgl.accessToken = 'pk.eyJ1IjoibWNhcm1lbGxlIiwiYSI6ImNtMWdyeTJlMjA3Y3kyaXExcXA3NTlvMDcifQ.gqJsCfx2HxlQpZE6v-2t3A'; // Replace with your Mapbox access token
@@ -33,15 +43,48 @@
             zoom: 6
         });
 
+        let currentYear = 2018;
+        let playing = true; // Control whether the animation is playing
+        let interval;
+
+        // Function to update the map based on the selected year
+        function updateMapByYear(year) {
+            map.setFilter('geojson-layer', ['==', ['get', 'year'], year]);
+            document.getElementById('year').textContent = Year: ${year};
+            document.getElementById('year-slider').value = year;
+        }
+
+        // Function to cycle through years automatically
+        function startAutoplay() {
+            interval = setInterval(() => {
+                if (currentYear > 2023) {
+                    currentYear = 2018;
+                }
+                updateMapByYear(currentYear);
+                currentYear++;
+            }, 5000); 
+        }
+
+        // Pause or resume the autoplay
+        function togglePlayPause() {
+            if (playing) {
+                clearInterval(interval);
+                document.getElementById('play-pause').textContent = 'Play';
+            } else {
+                startAutoplay();
+                document.getElementById('play-pause').textContent = 'Pause';
+            }
+            playing = !playing;
+        }
+
         // Load the GeoJSON data from GitHub Pages
         map.on('load', () => {
-            // Adding source to the map
             map.addSource('geojson-data', {
                 type: 'geojson',
-                data: 'https://raw.githubusercontent.com/appgpk/geojson-maps/main/output.geojson' // URL of the GeoJSON data
+                data: 'https://raw.githubusercontent.com/appgpk/geojson-maps/main/output.geojson' // Use the GitHub Pages URL
             });
 
-            // Adding a layer to display the GeoJSON data without any filter
+            // Add a layer to display the GeoJSON data
             map.addLayer({
                 id: 'geojson-layer',
                 type: 'circle',
@@ -50,16 +93,23 @@
                     'circle-radius': ['interpolate', ['linear'], ['get', 'fatalities'], 0, 4, 100, 30],
                     'circle-color': ['interpolate', ['linear'], ['get', 'fatalities'], 0, '#f28cb1', 100, '#e55e5e'],
                     'circle-opacity': 0.8
-                }
+                },
+                filter: ['==', ['get', 'year'], 2018] // Initial filter for the first year
             });
 
-            // Debug: Log to check if data is loaded
-            map.getSource('geojson-data').on('data', (e) => {
-                if (e.isSourceLoaded) {
-                    console.log("GeoJSON data loaded successfully");
-                } else {
-                    console.error("GeoJSON data failed to load");
-                }
+            // Start autoplay
+            startAutoplay();
+
+            // Set up event listener for play/pause button
+            document.getElementById('play-pause').addEventListener('click', togglePlayPause);
+
+            // Set up the slider event listener
+            document.getElementById('year-slider').addEventListener('input', (e) => {
+                const selectedYear = parseInt(e.target.value, 10);
+                updateMapByYear(selectedYear);
+                clearInterval(interval); // Pause autoplay when manually selecting a year
+                document.getElementById('play-pause').textContent = 'Play';
+                playing = false;
             });
         });
     </script>
